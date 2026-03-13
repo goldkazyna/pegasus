@@ -4,6 +4,7 @@ namespace App\Telegram\Handlers;
 
 use App\Models\Post;
 use App\Services\ClaudeService;
+use Illuminate\Support\Facades\DB;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardMarkup;
@@ -12,14 +13,26 @@ class RegenerateHandler
 {
     public function __invoke(Nutgram $bot, string $id): void
     {
-        $post = Post::with('tour')->find($id);
+        $post = DB::transaction(function () use ($id) {
+            $post = Post::with('tour')->lockForUpdate()->find($id);
 
-        if (!$post || $post->status !== 'draft') {
+            if (!$post || $post->status !== 'draft') {
+                return null;
+            }
+
+            if (!$post->canRegenerate()) {
+                return false;
+            }
+
+            return $post;
+        });
+
+        if ($post === null) {
             $bot->answerCallbackQuery(text: 'Пост уже обработан.');
             return;
         }
 
-        if (!$post->canRegenerate()) {
+        if ($post === false) {
             $bot->answerCallbackQuery(
                 text: 'Лимит перегенераций исчерпан (макс ' . config('claude.max_regenerations') . ').',
                 show_alert: true,

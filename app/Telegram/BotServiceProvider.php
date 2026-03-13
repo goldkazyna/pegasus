@@ -55,6 +55,11 @@ class BotServiceProvider extends ServiceProvider
                 return;
             }
 
+            if ($post->user_id !== $bot->get('db_user')->id) {
+                $bot->sendMessage('Этот пост не ваш.');
+                return;
+            }
+
             try {
                 $year = now()->timezone('Asia/Almaty')->year;
                 $publishAt = Carbon::createFromFormat(

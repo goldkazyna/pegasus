@@ -15,6 +15,18 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Webhook Secret Token
+    |--------------------------------------------------------------------------
+    |
+    | A secret token set via setWebhook to verify that requests come from
+    | Telegram. Checked against the X-Telegram-Bot-Api-Secret-Token header.
+    |
+    */
+
+    'secret' => env('TELEGRAM_WEBHOOK_SECRET'),
+
+    /*
+    |--------------------------------------------------------------------------
     | Bot API URL
     |--------------------------------------------------------------------------
     |

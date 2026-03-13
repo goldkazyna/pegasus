@@ -20,8 +20,8 @@ return new class extends Migration
             $table->string('location');
             $table->string('departure_city');
             $table->string('airline');
-            $table->dateTime('flight_out');
-            $table->dateTime('flight_back');
+            $table->dateTime('flight_out')->nullable();
+            $table->dateTime('flight_back')->nullable();
             $table->string('nights');
             $table->string('room_type');
             $table->string('meal_plan');

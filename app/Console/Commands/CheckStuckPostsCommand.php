@@ -13,7 +13,7 @@ class CheckStuckPostsCommand extends Command
 
     public function handle(): int
     {
-        $stuckPosts = Post::where('status', 'scheduled')
+        $stuckPosts = Post::with('tour')->where('status', 'scheduled')
             ->where('publish_at', '<', now())
             ->get();
 

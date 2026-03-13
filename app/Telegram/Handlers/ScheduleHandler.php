@@ -11,19 +11,6 @@ class ScheduleHandler
 {
     public function __invoke(Nutgram $bot, string $id, string $option): void
     {
-        $post = DB::transaction(function () use ($id) {
-            $post = Post::lockForUpdate()->find($id);
-            if (!$post || $post->status !== 'approved') {
-                return null;
-            }
-            return $post;
-        });
-
-        if (!$post) {
-            $bot->answerCallbackQuery(text: 'Пост уже запланирован или обработан.');
-            return;
-        }
-
         $almatyNow = now()->timezone('Asia/Almaty');
 
         $publishAt = match ($option) {
@@ -45,10 +32,24 @@ class ScheduleHandler
 
         $publishAtUtc = $publishAt->utc();
 
-        $post->update([
-            'status'     => 'scheduled',
-            'publish_at' => $publishAtUtc,
-        ]);
+        $post = DB::transaction(function () use ($id, $publishAtUtc) {
+            $post = Post::lockForUpdate()->find($id);
+            if (!$post || $post->status !== 'approved') {
+                return null;
+            }
+
+            $post->update([
+                'status'     => 'scheduled',
+                'publish_at' => $publishAtUtc,
+            ]);
+
+            return $post;
+        });
+
+        if (!$post) {
+            $bot->answerCallbackQuery(text: 'Пост уже запланирован или обработан.');
+            return;
+        }
 
         PublishPostJob::dispatch($post)->delay($publishAtUtc);
 

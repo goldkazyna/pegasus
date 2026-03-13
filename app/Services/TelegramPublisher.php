@@ -17,7 +17,6 @@ class TelegramPublisher
         $message = $this->bot->sendMessage(
             text: $text,
             chat_id: config('telegram.channel_id'),
-            parse_mode: 'HTML',
         );
 
         return $message->message_id;
