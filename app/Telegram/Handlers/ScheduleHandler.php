@@ -14,6 +14,7 @@ class ScheduleHandler
         $almatyNow = now()->timezone('Asia/Almaty');
 
         $publishAt = match ($option) {
+            'now'         => $almatyNow->copy(),
             '1h'         => $almatyNow->copy()->addHour(),
             '3h'         => $almatyNow->copy()->addHours(3),
             'today_18'   => $almatyNow->copy()->setTime(18, 0),

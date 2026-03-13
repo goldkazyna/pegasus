@@ -33,6 +33,10 @@ class ApproveHandler
         $keyboard = InlineKeyboardMarkup::make()
             ->addRow(
                 InlineKeyboardButton::make(
+                    '🚀 Сейчас',
+                    callback_data: "schedule:{$post->id}:now"
+                ),
+                InlineKeyboardButton::make(
                     'Через 1 час',
                     callback_data: "schedule:{$post->id}:1h"
                 ),
