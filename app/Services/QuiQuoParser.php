@@ -39,8 +39,23 @@ class QuiQuoParser
 
     private function extractTourData(Crawler $node): ?array
     {
-        // Hotel name: "1. Hien Minh Bungalow 3*" -> extract name and stars
+        // Hotel name: try <noindex><a> first (hotels with rating), then plain .name text
         $rawName = $this->text($node, '.hotel .info .name noindex a');
+        if (empty($rawName)) {
+            // Fallback: name is plain text in .name div (no rating/link)
+            $nameNode = $node->filter('.hotel .info .name');
+            if ($nameNode->count() > 0) {
+                // Get only direct text, excluding child elements like .rating
+                $rawName = $nameNode->first()->text('');
+                // If it contains rating text, extract just the hotel name part
+                // The format is always "N. Hotel Name N*"
+                if (preg_match('/(\d+\.\s*.+\d\*)/u', $rawName, $m)) {
+                    $rawName = trim($m[1]);
+                } else {
+                    $rawName = trim($rawName);
+                }
+            }
+        }
         if (empty($rawName)) {
             return null;
         }
@@ -66,9 +81,9 @@ class QuiQuoParser
             [$country, $location] = array_map('trim', explode(',', $countryText, 2));
         }
 
-        // Departure city: "Начало тура: из Алматы" -> "Алматы"
+        // Departure city: "Начало тура: из Алматы" or "Начало тура: Алматы" -> "Алматы"
         $depText = $this->text($node, '.depcity');
-        $departureCity = preg_replace('/^.*из\s+/u', '', $depText);
+        $departureCity = preg_replace('/^Начало тура:\s*(из\s+)?/u', '', $depText);
 
         // Nights: "5+1 ночей" -> "5+1"
         $nightsText = $this->text($node, '.nights');
@@ -77,12 +92,16 @@ class QuiQuoParser
         // Meal plan: "BB - Только завтрак"
         $mealPlan = $this->text($node, '.board span');
 
-        // Room: "superior bungalow, 2 взрослых"
+        // Room: "superior bungalow, 2 взрослых" or "roh / 2 взр"
         $roomText = $this->text($node, '.room span');
+        if (empty($roomText)) {
+            // Fallback: try board-room-popup
+            $roomText = $this->text($node, '.board-room-popup span');
+        }
         $roomType = $roomText;
         $guests = '';
-        // Split room and guests on last comma before number of adults
-        if (preg_match('/^(.+),\s*(\d+\s+взрослы.*)$/u', $roomText, $m)) {
+        // Split room and guests: "room / 2 взр" or "room, 2 взрослых"
+        if (preg_match('/^(.+?)\s*[\/,]\s*(\d+\s+взр.*)$/u', $roomText, $m)) {
             $roomType = trim($m[1]);
             $guests = trim($m[2]);
         }
