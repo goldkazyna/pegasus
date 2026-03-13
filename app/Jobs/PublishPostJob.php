@@ -9,6 +9,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Log;
 
 class PublishPostJob implements ShouldQueue
 {
@@ -20,13 +21,22 @@ class PublishPostJob implements ShouldQueue
 
     public function handle(TelegramPublisher $publisher): void
     {
+        Log::info("PublishPostJob: starting for post {$this->post->id}");
+
         $this->post->refresh();
 
+        Log::info("PublishPostJob: post {$this->post->id} status={$this->post->status}");
+
         if ($this->post->status !== 'scheduled') {
+            Log::warning("PublishPostJob: post {$this->post->id} status is not 'scheduled', skipping");
             return;
         }
 
+        Log::info("PublishPostJob: publishing post {$this->post->id} to channel " . config('telegram.channel_id'));
+
         $messageId = $publisher->publishToChannel($this->post->generated_text);
+
+        Log::info("PublishPostJob: post {$this->post->id} published, telegram_message_id={$messageId}");
 
         $this->post->update([
             'status' => 'published',
@@ -38,5 +48,7 @@ class PublishPostJob implements ShouldQueue
             $this->post->user->telegram_id,
             "✅ Пост опубликован в канал: {$this->post->tour->hotel_name}"
         );
+
+        Log::info("PublishPostJob: done for post {$this->post->id}");
     }
 }

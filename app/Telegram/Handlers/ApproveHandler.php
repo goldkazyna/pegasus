@@ -4,6 +4,7 @@ namespace App\Telegram\Handlers;
 
 use App\Models\Post;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use SergiX44\Nutgram\Nutgram;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardButton;
 use SergiX44\Nutgram\Telegram\Types\Keyboard\InlineKeyboardMarkup;
@@ -12,14 +13,23 @@ class ApproveHandler
 {
     public function __invoke(Nutgram $bot, string $id): void
     {
+        Log::info("ApproveHandler: received approve for post {$id}");
+
         $post = DB::transaction(function () use ($id) {
             $post = Post::lockForUpdate()->find($id);
 
-            if (!$post || $post->status !== 'draft') {
+            if (!$post) {
+                Log::warning("ApproveHandler: post {$id} not found");
+                return null;
+            }
+
+            if ($post->status !== 'draft') {
+                Log::warning("ApproveHandler: post {$id} status is '{$post->status}', expected 'draft'");
                 return null;
             }
 
             $post->update(['status' => 'approved']);
+            Log::info("ApproveHandler: post {$id} status changed to approved");
             return $post;
         });
 
@@ -66,5 +76,7 @@ class ApproveHandler
             message_id: $bot->callbackQuery()->message->message_id,
             reply_markup: $keyboard,
         );
+
+        Log::info("ApproveHandler: schedule keyboard sent for post {$id}");
     }
 }
