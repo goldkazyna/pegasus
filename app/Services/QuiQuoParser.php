@@ -138,7 +138,7 @@ class QuiQuoParser
         }
     }
 
-    private function parseFlightDateTime(string $text): string
+    private function parseFlightDateTime(string $text): ?string
     {
         // Input: "14 мар 22:20 Алматы" or "20 мар 09:30 Фукуок"
         $months = [
@@ -155,6 +155,6 @@ class QuiQuoParser
             return "{$year}-{$month}-{$day} {$time}:00";
         }
 
-        return '';
+        return null;
     }
 }
