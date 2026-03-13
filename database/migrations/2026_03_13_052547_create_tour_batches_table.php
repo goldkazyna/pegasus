@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table) {
+        Schema::create('tour_batches', function (Blueprint $table) {
             $table->id();
-            $table->bigInteger('telegram_id')->unique();
-            $table->string('name');
-            $table->boolean('is_admin')->default(false);
-            $table->boolean('is_active')->default(true);
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->string('source_url');
             $table->timestamps();
         });
     }
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('users');
+        Schema::dropIfExists('tour_batches');
     }
 };
