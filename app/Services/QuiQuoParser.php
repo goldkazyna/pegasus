@@ -60,6 +60,16 @@ class QuiQuoParser
             return null;
         }
 
+        // Hotel image from background-image style
+        $imageUrl = null;
+        $imgNode = $node->filter('.hotel .thumb .img');
+        if ($imgNode->count() > 0) {
+            $style = $imgNode->first()->attr('style') ?? '';
+            if (preg_match("/background-image:\s*url\('([^']+)'\)/", $style, $m)) {
+                $imageUrl = html_entity_decode($m[1]);
+            }
+        }
+
         // Parse "1. Hien Minh Bungalow 3*" -> name="Hien Minh Bungalow", stars=3
         $hotelName = $rawName;
         $stars = 0;
@@ -132,6 +142,7 @@ class QuiQuoParser
 
         return [
             'hotel_name' => $hotelName,
+            'image_url' => $imageUrl,
             'stars' => $stars,
             'country' => $country,
             'location' => $location,

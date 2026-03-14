@@ -11,6 +11,7 @@ class Tour extends Model
     protected $fillable = [
         'batch_id',
         'hotel_name',
+        'image_url',
         'stars',
         'country',
         'location',

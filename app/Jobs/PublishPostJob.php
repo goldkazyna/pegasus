@@ -34,7 +34,10 @@ class PublishPostJob implements ShouldQueue
 
         Log::info("PublishPostJob: publishing post {$this->post->id} to channel " . config('telegram.channel_id'));
 
-        $messageId = $publisher->publishToChannel($this->post->generated_text);
+        $messageId = $publisher->publishToChannel(
+            $this->post->generated_text,
+            $this->post->tour->image_url
+        );
 
         Log::info("PublishPostJob: post {$this->post->id} published, telegram_message_id={$messageId}");
 

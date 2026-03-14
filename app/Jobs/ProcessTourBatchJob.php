@@ -85,11 +85,23 @@ class ProcessTourBatchJob implements ShouldQueue
                     InlineKeyboardButton::make('🔄 Перегенерировать', callback_data: "regenerate:{$post->id}"),
                 );
 
-            $bot->sendMessage(
-                text: $generatedText,
-                chat_id: $this->chatId,
-                reply_markup: $keyboard,
-            );
+            if ($tour->image_url) {
+                $caption = mb_strlen($generatedText) > 1024
+                    ? mb_substr($generatedText, 0, 1021) . '...'
+                    : $generatedText;
+                $bot->sendPhoto(
+                    photo: $tour->image_url,
+                    caption: $caption,
+                    chat_id: $this->chatId,
+                    reply_markup: $keyboard,
+                );
+            } else {
+                $bot->sendMessage(
+                    text: $generatedText,
+                    chat_id: $this->chatId,
+                    reply_markup: $keyboard,
+                );
+            }
         }
 
         $bot->sendMessage(
